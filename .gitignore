@@ -1,0 +1,13 @@
+# Dossier généré à chaque compilation par OpenPLC Editor
+# (sources C++ du runtime, exemples Arduino, binaires .hex/.elf...)
+build/
+**/build/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
