@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulation du feu tricolore avec passage piéton</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef1f5;--card:#fff;--fg:#1b2430;--mut:#5b6777;--bd:#d5dbe4;--road:#3a3f47;--acc:#2b6cb0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--card:#1a212b;--fg:#e6ebf2;--mut:#98a4b5;--bd:#2c3644;--road:#232830;--acc:#4f94e8}}
+:root[data-theme="dark"]{--bg:#10151c;--card:#1a212b;--fg:#e6ebf2;--mut:#98a4b5;--bd:#2c3644;--road:#232830;--acc:#4f94e8}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:16px}
+h1{font-size:1.5rem;margin:0}h2{font-size:1rem;margin:0 0 8px}
+.mut{color:var(--mut);margin:0}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px}
+.scene{display:flex;justify-content:center;align-items:flex-end;gap:clamp(12px,6vw,56px);background:var(--road);border-color:transparent;padding:24px 12px}
+figure{margin:0;display:grid;justify-items:center;gap:8px}figcaption{color:#cbd3dd;font-size:.85rem}
+.box{background:#101216;border:3px solid #000;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 6px 16px #0006}
+.lamp{width:clamp(44px,12vw,60px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:#262a31;box-shadow:inset 0 2px 6px #000;transition:background .15s,box-shadow .15s}
+.lamp.on.r{background:#ff3b30;box-shadow:0 0 26px 6px #ff3b3099}
+.lamp.on.o{background:#ffa31a;box-shadow:0 0 26px 6px #ffa31a99}
+.lamp.on.g{background:#2fd166;box-shadow:0 0 26px 6px #2fd16699}
+.lamp svg{width:58%;fill:#000;opacity:.4}.lamp.on svg{opacity:.85}
+.zebra{width:clamp(90px,26vw,160px);height:230px;background:repeating-linear-gradient(#f2f2f2 0 14px,transparent 14px 30px);border-radius:4px;opacity:.9}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{font:inherit;padding:10px 16px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--fg);cursor:pointer}
+.btn.main{background:#f5b400;border-color:#c68f00;color:#1a1400;font-weight:700;font-size:1.05rem;width:100%;padding:14px}
+.btn.main:active{transform:scale(.98)}
+select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--fg)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.chip{border:1px solid var(--bd);border-radius:999px;padding:4px 10px;font-size:.85rem;color:var(--mut)}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.bar{height:10px;background:var(--bd);border-radius:6px;overflow:hidden}.bar>i{display:block;height:100%;width:0;background:var(--acc)}
+.badge{display:inline-block;border-radius:999px;padding:2px 12px;font-size:.9rem;border:1px solid var(--bd);color:var(--mut)}
+.badge.on{background:#f5b400;border-color:#c68f00;color:#1a1400;font-weight:700}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.9rem}
+td,th{padding:4px 8px;border-bottom:1px solid var(--bd);text-align:left}
+td.v{font-variant-numeric:tabular-nums}td.v.on{color:#1f9d55;font-weight:700}
+ul{margin:0;padding-left:18px;color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Feu tricolore avec passage piéton</h1>
+<p class="mut">Simulation de la logique du programme ST : mêmes étapes, mêmes durées, même mémorisation de la demande.</p>
+
+<div class="card scene">
+<figure><div class="box"><i class="lamp r" data-o="V_ROUGE"></i><i class="lamp o" data-o="V_ORANGE"></i><i class="lamp g" data-o="V_VERT"></i></div><figcaption>Feu voiture</figcaption></figure>
+<div class="zebra"></div>
+<figure><div class="box">
+<i class="lamp r" data-o="P_ROUGE"><svg viewBox="0 0 20 30"><circle cx="10" cy="4" r="3.5"/><rect x="5" y="9" width="10" height="12" rx="3"/><rect x="5.5" y="21" width="3.6" height="8"/><rect x="10.9" y="21" width="3.6" height="8"/></svg></i>
+<i class="lamp g" data-o="P_VERT"><svg viewBox="0 0 20 30"><circle cx="10" cy="4" r="3.5"/><rect x="6" y="9" width="9" height="12" rx="3" transform="rotate(8 10 15)"/><path d="M7 21l-3 8h3.6l2.2-7zM11 21l4 8h3.6l-3.6-8z"/></svg></i>
+</div><figcaption>Feu piéton</figcaption></figure>
+</div>
+
+<div class="card">
+<button class="btn main" id="bp">Appuyer sur le bouton piéton</button>
+<div class="row" style="margin-top:12px">
+<label><input type="checkbox" id="auto"> Bouton simulé (impulsion toutes les 25 s)</label>
+<label>Vitesse <select id="spd"><option value="1">×1</option><option value="5">×5</option><option value="10">×10</option></select></label>
+<button class="btn" id="rst">Réinitialiser</button>
+</div>
+</div>
+
+<div class="card">
+<h2>État du programme</h2>
+<div class="row"><span>Demande piéton :</span><span class="badge" id="dem">aucune</span><span class="mut" id="clk"></span></div>
+<div class="chips" id="chips"></div>
+<div class="bar"><i id="bar"></i></div>
+<p class="mut" id="msg" style="margin-top:6px"></p>
+</div>
+
+<div class="card">
+<h2>Sorties de l’automate</h2>
+<div class="tw"><table><thead><tr><th>Variable</th><th>Adresse</th><th>Valeur</th></tr></thead><tbody id="outs"></tbody></table></div>
+</div>
+
+<div class="card">
+<h2>Journal des transitions</h2>
+<ul id="log"></ul>
+<p class="mut" style="margin-top:10px">Pour tester : sans appui, le feu reste au vert voiture. Un appui avant 10 s fait attendre la fin des 10 s. Un appui pendant les étapes 3 ou 4 est gardé pour le cycle suivant (le temps s’affiche en secondes simulées).</p>
+</div>
+</main>
+<script>
+const PT=[2000,10000,3000,8000,2000];
+const NAMES=["Tout rouge (2 s)","Vert voiture (10 s min)","Orange (3 s)","Vert piéton (8 s)","Tout rouge (2 s)"];
+const OUTS=[["V_VERT","%QX0.0"],["V_ORANGE","%QX0.1"],["V_ROUGE","%QX0.2"],["P_VERT","%QX0.3"],["P_ROUGE","%QX0.4"]];
+const $=s=>document.querySelector(s);
+class TON{
+  constructor(){this.q=false;this.p=false;this.s=0;this.st=0;this.et=0}
+  run(IN,pt,now){
+    if(this.s===0&&!this.p&&IN){this.s=1;this.q=false;this.st=now}
+    else if(!IN){this.s=0;this.q=false;this.et=0}
+    else if(this.s===1){if(this.st+pt<=now){this.s=2;this.q=true;this.et=pt}else this.et=now-this.st}
+    this.p=IN;return this.q;
+  }
+}
+let S,logs,auto=false,speed=1;
+function init(){S={e:0,dem:false,bsim:false,bp:false,now:0,sim:new TON(),t:PT.map(()=>new TON()),o:{}};logs=[]}
+function scan(){
+  const s=S;s.now+=20;
+  s.bsim=s.sim.run(auto&&!s.sim.q,25000,s.now);
+  if(s.bp||s.bsim)s.dem=true;
+  s.bp=false;
+  s.t.forEach((t,i)=>t.run(s.e===i,PT[i],s.now));
+  const e=s.e,q=s.t[e].q;let n=e;
+  if(e===1){if(q&&s.dem)n=2}
+  else if(q){n=e===4?1:e+1;if(e===2)s.dem=false}
+  if(n!==e){s.e=n;logs.unshift("t = "+(s.now/1000).toFixed(1)+" s : étape "+e+" → étape "+n+" ("+NAMES[n]+")");logs.length=Math.min(logs.length,8)}
+  const o=s.o,k=s.e;
+  o.V_VERT=k===1;o.V_ORANGE=k===2;o.V_ROUGE=k===0||k===3||k===4;
+  o.P_VERT=k===3;o.P_ROUGE=k!==3;
+}
+function build(){
+  $("#chips").innerHTML=NAMES.map((n,i)=>'<span class="chip" data-c="'+i+'">'+i+" · "+n+"</span>").join("");
+  $("#outs").innerHTML=OUTS.map(r=>"<tr><td>"+r[0]+"</td><td>"+r[1]+'</td><td class="v" data-v="'+r[0]+'"></td></tr>').join("");
+}
+function render(){
+  const s=S,o=s.o;
+  document.querySelectorAll("[data-o]").forEach(el=>el.classList.toggle("on",!!o[el.dataset.o]));
+  document.querySelectorAll("[data-v]").forEach(el=>{const v=!!o[el.dataset.v];el.textContent=v?"1":"0";el.classList.toggle("on",v)});
+  document.querySelectorAll("[data-c]").forEach(el=>el.classList.toggle("on",+el.dataset.c===s.e));
+  const d=$("#dem");d.textContent=s.dem?"mémorisée":"aucune";d.classList.toggle("on",s.dem);
+  $("#clk").textContent="temps simulé : "+(s.now/1000).toFixed(1)+" s";
+  const et=s.t[s.e].et,pt=PT[s.e];
+  $("#bar").style.width=Math.min(100,et/pt*100)+"%";
+  let m="Étape "+s.e+" : "+NAMES[s.e]+" — "+(Math.min(et,pt)/1000).toFixed(1)+" s sur "+pt/1000+" s.";
+  if(s.e===1&&et>=pt&&!s.dem)m="Les 10 s sont écoulées : le feu reste au vert voiture tant qu’aucune demande n’est mémorisée.";
+  $("#msg").textContent=m;
+  $("#log").innerHTML=logs.length?logs.map(l=>"<li>"+l+"</li>").join(""):"<li>Aucune transition pour le moment.</li>";
+}
+$("#bp").onclick=()=>{S.bp=true};
+$("#auto").onchange=e=>{auto=e.target.checked};
+$("#spd").onchange=e=>{speed=+e.target.value};
+$("#rst").onclick=()=>{init();scan();render()};
+init();build();scan();render();
+setInterval(()=>{for(let i=0;i<speed;i++)scan();render()},20);
+</script>
+</body>
+</html>
